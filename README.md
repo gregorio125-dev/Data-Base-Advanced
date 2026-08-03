@@ -26,14 +26,14 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
  
 ---
  
-## 🙋 Posibles usuarios del sistema
+## Posibles usuarios del sistema
  
 - **Bibliotecario(a):** gestiona el catálogo, registra préstamos/devoluciones, revisa multas y morosos, genera reportes.
 - **Estudiante / usuario:** busca libros, solicita préstamos, deja reseñas y calificaciones, consulta su historial y multas.
 - **Administrador:** gestiona usuarios y permisos, supervisa reglas de negocio (límites de préstamo, políticas de multas), accede a analítica y reportes ejecutivos.
 ---
  
-## 🗂️ Lista preliminar de entidades
+## Lista preliminar de entidades
  
 **Modelo relacional (SQL):**
 - `Libro` (título, autor, categoría, ISBN, ejemplares disponibles)
@@ -47,7 +47,7 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
 - Hechos de préstamos (libro, fecha, categoría, usuario) para construir reportes agregados.
 ---
  
-## 📏 Reglas de negocio (mínimo tres)
+##  Reglas de negocio
  
 1. Un usuario **no puede tener más de N libros prestados** simultáneamente (N configurable, ej. 3).
 2. **No se puede prestar un libro que ya está prestado** (sin ejemplares disponibles) hasta que sea devuelto.
@@ -55,7 +55,7 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
 4. Un usuario con **multas pendientes de pago no puede solicitar nuevos préstamos** hasta regularizar su situación.
 ---
  
-## 🧩 ¿Por qué es un proyecto suficientemente complejo?
+## ¿Por qué es un proyecto suficientemente complejo?
  
 - Combina **dos modelos de datos distintos** (relacional para catálogo/préstamos/multas, NoSQL para reseñas con estructura variable), lo que exige diseñar la integración entre ambos.
 - Requiere **lógica de negocio no trivial**, como triggers para cálculo automático de multas y validaciones de disponibilidad antes de cada préstamo.
@@ -64,7 +64,7 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
 - Contempla **casos de error costosos** (prestar un libro inexistente o ya prestado, no registrar una devolución) que deben prevenirse con restricciones e integridad de datos.
 ---
  
-## 🤖 Uso de IA
+## Uso de IA
  
 Se permite el apoyo de inteligencia artificial durante el desarrollo del proyecto, bajo la siguiente política:
  
