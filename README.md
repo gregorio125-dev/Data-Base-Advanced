@@ -5,9 +5,7 @@ Sistema para digitalizar el préstamo, devolución y control de libros en biblio
 ---
  
 ## Participantes
- 
-| Usuario de GitHub |
-|---|---|---|
+
 | @gregorio125-dev |
 | @CristianMarulandalo | 
 | @neiverfernandez4 | 
