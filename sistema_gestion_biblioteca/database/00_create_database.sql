@@ -1,0 +1,14 @@
+USE master;
+GO
+
+IF DB_ID(N'BibliotecaDB') IS NULL
+BEGIN
+    CREATE DATABASE BibliotecaDB;
+END
+GO
+
+ALTER DATABASE BibliotecaDB SET RECOVERY SIMPLE;
+GO
+
+USE BibliotecaDB;
+GO
