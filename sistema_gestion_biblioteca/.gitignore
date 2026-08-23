@@ -1,6 +1,6 @@
-__pycache__/
-*.py[cod]
-.venv/
-.env
+backend/.venv/
+backend/error.log
+backend/log.txt
 .vscode/
-*.log
+__pycache__/
+*.pyc
