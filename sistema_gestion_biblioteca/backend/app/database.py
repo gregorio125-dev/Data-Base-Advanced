@@ -17,8 +17,7 @@ CONNECTION_STRING = (
     f"DRIVER={{{DB_DRIVER}}};"
     f"SERVER={DB_SERVER},{DB_PORT};"
     f"DATABASE={DB_NAME};"
-    f"UID={DB_USER};"
-    f"PWD={DB_PASSWORD};"
+    f"Trusted_Connection=yes;"
     f"TrustServerCertificate={DB_TRUST_SERVER_CERTIFICATE};"
 )
 
