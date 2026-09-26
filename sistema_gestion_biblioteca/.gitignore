@@ -1,4 +1,6 @@
 backend/.venv/
+backend/.env
+.env
 backend/error.log
 backend/log.txt
 .vscode/

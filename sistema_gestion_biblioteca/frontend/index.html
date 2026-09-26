@@ -98,6 +98,28 @@
           </form>
         </div>
 
+        <div class="panel-card">
+          <div class="section-header" style="margin-bottom: 12px;">
+            <h3 style="margin: 0;">Préstamos activos</h3>
+            <span id="active-loans-count" class="badge active">0 activos</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Libro</th>
+                <th>Ejemplar</th>
+                <th>Préstamo</th>
+                <th>Vencimiento</th>
+                <th>Plazo</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="active-loans-table-body"></tbody>
+          </table>
+        </div>
+
         <div class="two-columns">
           <div class="panel-card">
             <h3>Préstamos vencidos</h3>
@@ -108,7 +130,7 @@
                   <th>Usuario</th>
                   <th>Libro</th>
                   <th>Vencimiento</th>
-                  <th>Días</th>
+                  <th>Días retraso</th>
                   <th>Acción</th>
                 </tr>
               </thead>
@@ -163,12 +185,16 @@
 
             <div class="field-group">
               <label for="book-categoria">Categoría</label>
-              <input id="book-categoria" name="categoria_id" type="number" min="1" required />
+              <select id="book-categoria" name="categoria_id" required>
+                <option value="">Cargando categorías...</option>
+              </select>
             </div>
 
             <div class="field-group">
               <label for="book-autor">Autor</label>
-              <input id="book-autor" name="autor_id" type="number" min="1" required />
+              <select id="book-autor" name="autor_id" required>
+                <option value="">Cargando autores...</option>
+              </select>
             </div>
 
             <div class="field-group">

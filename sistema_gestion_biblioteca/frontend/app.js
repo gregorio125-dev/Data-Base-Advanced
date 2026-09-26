@@ -3,6 +3,9 @@ const API_BASE = 'http://127.0.0.1:8000/api';
 const state = {
   books: [],
   users: [],
+  categories: [],
+  authors: [],
+  activeLoans: [],
   availableCopies: [],
   overdueLoans: []
 };
@@ -66,7 +69,7 @@ function bindBookForm() {
       descripcion: form.elements.descripcion.value.trim() || null
     };
 
-    if (!payload.titulo || !payload.isbn) {
+    if (!payload.titulo || !payload.isbn || !payload.categoria_id || !payload.autor_id) {
       showMessage('Completa los campos requeridos del libro.', 'error');
       return;
     }
@@ -94,6 +97,7 @@ function bindBookForm() {
       form.reset();
       closeModal('book-modal');
       await loadBooks();
+      await loadLoanData();
     } catch (error) {
       showMessage(error.message, 'error');
     }
@@ -169,7 +173,9 @@ function bindLoanForm() {
 
       showMessage(response.mensaje || 'Préstamo registrado correctamente.', 'success');
       form.reset();
+      form.elements.dias_prestamo.value = 14;
       await loadLoanData();
+      await loadBooks();
     } catch (error) {
       showMessage(error.message, 'error');
     }
@@ -177,6 +183,7 @@ function bindLoanForm() {
 }
 
 function bindTableActions() {
+  // Books actions
   document.getElementById('books-table-body').addEventListener('click', async (event) => {
     const button = event.target.closest('button');
     if (!button) return;
@@ -189,18 +196,20 @@ function bindTableActions() {
     }
 
     if (button.dataset.action === 'delete-book') {
-      if (!confirm(`¿Deseas eliminar el libro #${bookId}?`)) return;
+      if (!confirm(`¿Deseas eliminar el libro #${bookId} (${book ? book.Titulo : ''})?`)) return;
 
       try {
         const response = await apiRequest(`/books/${bookId}`, { method: 'DELETE' });
         showMessage(response.mensaje || 'Libro eliminado.', 'success');
         await loadBooks();
+        await loadLoanData();
       } catch (error) {
         showMessage(error.message, 'error');
       }
     }
   });
 
+  // Users actions
   document.getElementById('users-table-body').addEventListener('click', async (event) => {
     const button = event.target.closest('button');
     if (!button) return;
@@ -225,30 +234,76 @@ function bindTableActions() {
     }
   });
 
+  // Active loans actions
+  document.getElementById('active-loans-table-body').addEventListener('click', async (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const loanId = Number(button.dataset.id);
+    await handleLoanReturn(loanId);
+  });
+
+  // Overdue loans actions
   document.getElementById('overdue-table-body').addEventListener('click', async (event) => {
     const button = event.target.closest('button');
     if (!button) return;
-
     const loanId = Number(button.dataset.id);
-    try {
-      const response = await apiRequest(`/loans/${loanId}/return`, { method: 'PUT' });
-      showMessage(response.mensaje || 'Devolución registrada.', 'success');
-      await loadLoanData();
-    } catch (error) {
-      showMessage(error.message, 'error');
-    }
+    await handleLoanReturn(loanId);
   });
+}
+
+async function handleLoanReturn(loanId) {
+  if (!loanId) return;
+  try {
+    const response = await apiRequest(`/loans/${loanId}/return`, { method: 'PUT' });
+    const multa = Number(response.Multa || 0);
+    if (multa > 0) {
+      showMessage(`Devolución registrada. ¡Multa generada: $${multa.toLocaleString('es-CO')}! (${response.DiasRetraso || 0} días de retraso)`, 'warning');
+    } else {
+      showMessage(response.mensaje || 'Devolución registrada correctamente sin multa.', 'success');
+    }
+    await loadLoanData();
+    await loadBooks();
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
 }
 
 async function loadAllData() {
   try {
     await Promise.all([
+      loadCategoriesAndAuthors(),
       loadBooks(),
       loadUsers(),
       loadLoanData()
     ]);
   } catch (error) {
     showMessage(error.message, 'error');
+  }
+}
+
+async function loadCategoriesAndAuthors() {
+  try {
+    const [categories, authors] = await Promise.all([
+      apiRequest('/categories'),
+      apiRequest('/authors')
+    ]);
+    state.categories = categories;
+    state.authors = authors;
+
+    const catSelect = document.getElementById('book-categoria');
+    const autSelect = document.getElementById('book-autor');
+
+    if (catSelect) {
+      catSelect.innerHTML = '<option value="">Seleccione una categoría</option>' +
+        categories.map((c) => `<option value="${c.CategoriaID}">${escapeHtml(c.Nombre)}</option>`).join('');
+    }
+
+    if (autSelect) {
+      autSelect.innerHTML = '<option value="">Seleccione un autor</option>' +
+        authors.map((a) => `<option value="${a.AutorID}">${escapeHtml(a.NombreCompleto || `${a.Nombre} ${a.Apellido}`)}</option>`).join('');
+    }
+  } catch (error) {
+    console.error('Error al cargar catálogos:', error);
   }
 }
 
@@ -263,16 +318,19 @@ async function loadUsers() {
 }
 
 async function loadLoanData() {
-  const [available, overdue] = await Promise.all([
+  const [available, overdue, active] = await Promise.all([
     apiRequest('/loans/available'),
-    apiRequest('/loans/overdue')
+    apiRequest('/loans/overdue'),
+    apiRequest('/loans/active')
   ]);
 
   state.availableCopies = available;
   state.overdueLoans = overdue;
+  state.activeLoans = active;
 
-  renderAvailableCopiesTable();
+  renderActiveLoansTable();
   renderOverdueTable();
+  renderAvailableCopiesTable();
   await loadLoanSelectors();
 }
 
@@ -285,11 +343,11 @@ async function loadLoanSelectors() {
 
   userSelect.innerHTML = '<option value="">Seleccione un usuario</option>' +
     users.filter((user) => Number(user.Activo) === 1)
-      .map((user) => `<option value="${user.UsuarioID}">${user.Nombre} (${user.Email})</option>`)
+      .map((user) => `<option value="${user.UsuarioID}">${escapeHtml(user.Nombre)} (${escapeHtml(user.Email)})</option>`)
       .join('');
 
   copySelect.innerHTML = '<option value="">Seleccione un ejemplar</option>' +
-    copies.map((copy) => `<option value="${copy.EjemplarID}">${copy.CodigoInventario} - ${copy.Titulo}</option>`).join('');
+    copies.map((copy) => `<option value="${copy.EjemplarID}">${escapeHtml(copy.CodigoInventario)} - ${escapeHtml(copy.Titulo)}</option>`).join('');
 }
 
 function renderBooksTable() {
@@ -303,12 +361,16 @@ function renderBooksTable() {
   tbody.innerHTML = state.books.map((book) => `
     <tr>
       <td>${book.LibroID}</td>
-      <td>${escapeHtml(book.Titulo || '—')}</td>
-      <td>${escapeHtml(book.ISBN || '—')}</td>
+      <td><strong>${escapeHtml(book.Titulo || '—')}</strong></td>
+      <td><code>${escapeHtml(book.ISBN || '—')}</code></td>
       <td>${escapeHtml(book.Autor || '—')}</td>
       <td>${escapeHtml(book.Categoria || '—')}</td>
       <td>${Number(book.TotalEjemplares ?? 0)}</td>
-      <td>${Number(book.EjemplaresDisponibles ?? 0)}</td>
+      <td>
+        <span class="badge ${Number(book.EjemplaresDisponibles) > 0 ? 'active' : 'inactive'}">
+          ${Number(book.EjemplaresDisponibles ?? 0)} disponibles
+        </span>
+      </td>
       <td>
         <div class="cell-actions">
           <button class="action-btn" data-action="edit-book" data-id="${book.LibroID}" type="button">Editar</button>
@@ -330,10 +392,10 @@ function renderUsersTable() {
   tbody.innerHTML = state.users.map((user) => `
     <tr>
       <td>${user.UsuarioID}</td>
-      <td>${escapeHtml(user.Nombre || '—')}</td>
+      <td><strong>${escapeHtml(user.Nombre || '—')}</strong></td>
       <td>${escapeHtml(user.Email || '—')}</td>
       <td>${escapeHtml(user.Telefono || '—')}</td>
-      <td>${Number(user.MaxPrestamos ?? 0)}</td>
+      <td>${Number(user.MaxPrestamos ?? 0)} libros</td>
       <td>
         <span class="badge ${Number(user.Activo) === 1 ? 'active' : 'inactive'}">
           ${Number(user.Activo) === 1 ? 'Activo' : 'Inactivo'}
@@ -343,11 +405,46 @@ function renderUsersTable() {
       <td>
         <div class="cell-actions">
           <button class="action-btn" data-action="edit-user" data-id="${user.UsuarioID}" type="button">Editar</button>
-          <button class="danger-btn" data-action="delete-user" data-id="${user.UsuarioID}" type="button">Eliminar</button>
+          <button class="danger-btn" data-action="delete-user" data-id="${user.UsuarioID}" type="button">Desactivar</button>
         </div>
       </td>
     </tr>
   `).join('');
+}
+
+function renderActiveLoansTable() {
+  const tbody = document.getElementById('active-loans-table-body');
+  const countBadge = document.getElementById('active-loans-count');
+  if (countBadge) {
+    countBadge.textContent = `${state.activeLoans.length} activo${state.activeLoans.length === 1 ? '' : 's'}`;
+  }
+
+  if (!state.activeLoans.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay préstamos activos en este momento.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = state.activeLoans.map((loan) => {
+    const dias = Number(loan.DiasParaVencer ?? 0);
+    const diasLabel = dias < 0
+      ? `<span class="badge danger">${Math.abs(dias)} días vencido</span>`
+      : `<span class="badge active">${dias} días restantes</span>`;
+
+    return `
+      <tr>
+        <td>${loan.PrestamoID}</td>
+        <td><strong>${escapeHtml(loan.Usuario || '—')}</strong></td>
+        <td>${escapeHtml(loan.Titulo || '—')}</td>
+        <td><code>${escapeHtml(loan.CodigoInventario || '—')}</code></td>
+        <td>${formatDate(loan.FechaPrestamo)}</td>
+        <td>${formatDate(loan.FechaVencimiento)}</td>
+        <td>${diasLabel}</td>
+        <td>
+          <button class="primary-btn" data-id="${loan.PrestamoID}" type="button">Marcar devuelto</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderOverdueTable() {
@@ -361,10 +458,10 @@ function renderOverdueTable() {
   tbody.innerHTML = state.overdueLoans.map((loan) => `
     <tr>
       <td>${loan.PrestamoID}</td>
-      <td>${escapeHtml(loan.Usuario || '—')}</td>
+      <td><strong>${escapeHtml(loan.Usuario || '—')}</strong></td>
       <td>${escapeHtml(loan.Titulo || '—')}</td>
       <td>${formatDate(loan.FechaVencimiento)}</td>
-      <td>${Number(loan.DiasRetraso ?? 0)}</td>
+      <td><span class="badge danger">${Number(loan.DiasRetraso ?? 0)} días</span></td>
       <td>
         <button class="primary-btn" data-id="${loan.PrestamoID}" type="button">Marcar devuelto</button>
       </td>
@@ -383,7 +480,7 @@ function renderAvailableCopiesTable() {
   tbody.innerHTML = state.availableCopies.map((copy) => `
     <tr>
       <td>${copy.EjemplarID}</td>
-      <td>${escapeHtml(copy.CodigoInventario || '—')}</td>
+      <td><code>${escapeHtml(copy.CodigoInventario || '—')}</code></td>
       <td>${escapeHtml(copy.Titulo || '—')}</td>
     </tr>
   `).join('');
@@ -496,11 +593,18 @@ function showMessage(message, type = 'success') {
   clearTimeout(showMessage.timeoutId);
   showMessage.timeoutId = setTimeout(() => {
     toast.classList.add('hidden');
-  }, 3000);
+  }, 4000);
 }
 
 function formatDate(value) {
   if (!value) return '—';
+  // Handle ISO date strings (e.g. "2026-09-25")
+  if (typeof value === 'string' && value.includes('-')) {
+    const parts = value.split('T')[0].split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
   const date = new Date(value);
   if (Number.isNaN(date)) return String(value);
   return date.toLocaleDateString('es-ES');

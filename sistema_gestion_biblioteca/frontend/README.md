@@ -14,15 +14,14 @@ Este proyecto es un frontend estático con HTML, CSS y JavaScript vanilla para c
 2. Abre la carpeta `frontend` en VS Code.
 3. Haz clic derecho en `index.html` y selecciona "Open with Live Server" o usa un servidor local simple como:
 
-   ```bash
-   cd "C:\Users\manue\Desktop\Data-Base-Advanced"
+   cd sistema_gestion_biblioteca/frontend
    python -m http.server 8001
    ```
 
 4. Luego abre en el navegador:
 
    ```text
-   http://127.0.0.1:8001/sistema_gestion_biblioteca/frontend/index.html
+   http://127.0.0.1:8001/index.html
    ```
 
 ## Nota

@@ -23,7 +23,7 @@ class BookUpdate(BaseModel):
 
 class UserCreate(BaseModel):
     nombre: str = Field(min_length=2, max_length=120)
-    email: EmailStr
+    email: str = Field(min_length=5, max_length=180, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     telefono: str | None = Field(default=None, max_length=30)
     max_prestamos: int = Field(default=3, ge=1, le=20)
 

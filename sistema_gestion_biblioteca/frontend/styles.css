@@ -192,6 +192,11 @@ tbody tr:hover {
   color: var(--success);
 }
 
+.badge.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .badge.inactive {
   background: #f2f4f7;
   color: var(--muted);
@@ -344,6 +349,10 @@ tbody tr:hover {
 
 .toast.success {
   background: var(--success);
+}
+
+.toast.warning {
+  background: #d97706;
 }
 
 .toast.error {

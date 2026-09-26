@@ -43,18 +43,25 @@ def create_user(data: UserCreate):
 
 @router.put("/{user_id}")
 def update_user(user_id: int, data: UserUpdate):
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE dbo.Usuario
-            SET Nombre=?, Email=?, Telefono=?, MaxPrestamos=?, Activo=?
-            WHERE UsuarioID=?
-        """, (data.nombre, str(data.email), data.telefono, data.max_prestamos,
-              data.activo, user_id))
-        if cursor.rowcount == 0:
-            raise HTTPException(404, "Usuario no encontrado")
-        conn.commit()
-    return {"mensaje": "Usuario actualizado correctamente"}
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE dbo.Usuario
+                SET Nombre=?, Email=?, Telefono=?, MaxPrestamos=?, Activo=?
+                WHERE UsuarioID=?
+            """, (data.nombre, str(data.email), data.telefono, data.max_prestamos,
+                  data.activo, user_id))
+            if cursor.rowcount == 0:
+                raise HTTPException(404, "Usuario no encontrado")
+            conn.commit()
+        return {"mensaje": "Usuario actualizado correctamente"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        if "UQ_Usuario_Email" in str(exc):
+            raise HTTPException(409, "El correo ya está registrado para otro usuario")
+        raise HTTPException(400, f"Error al actualizar usuario: {str(exc)}")
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int):
