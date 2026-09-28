@@ -1,271 +1,324 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Gestión de Biblioteca</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="topbar">
-      <div class="container header-inner">
-        <h1>Sistema de Gestión de Biblioteca</h1>
-        <nav class="tabs" aria-label="Navegación principal">
-          <button class="tab active" data-tab="books" type="button">Libros</button>
-          <button class="tab" data-tab="users" type="button">Usuarios</button>
-          <button class="tab" data-tab="loans" type="button">Préstamos</button>
-        </nav>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Gestión de Biblioteca</title>
+  <link rel="stylesheet" href="styles.css?v=4" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container header-inner">
+      <h1>Sistema de Gestión de Biblioteca</h1>
+      <nav class="tabs" aria-label="Navegación principal">
+        <button class="tab active" data-tab="books" type="button">Libros</button>
+        <button class="tab" data-tab="users" type="button">Usuarios</button>
+        <button class="tab" data-tab="loans" type="button">Préstamos</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <section id="books-section" class="view active">
+      <div class="section-header">
+        <h2>Libros</h2>
+        <button id="new-book-btn" class="primary-btn" type="button">+ Nuevo libro</button>
       </div>
-    </header>
 
-    <main class="container main-content">
-      <section id="books-section" class="view active">
-        <div class="section-header">
-          <h2>Libros</h2>
-          <button id="new-book-btn" class="primary-btn" type="button">+ Nuevo libro</button>
-        </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>ISBN</th>
+              <th>Autor</th>
+              <th>Categoría</th>
+              <th>Ejemplares</th>
+              <th>Disponibles</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="books-table-body"></tbody>
+        </table>
+      </div>
+    </section>
 
-        <div class="table-card">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Título</th>
-                <th>ISBN</th>
-                <th>Autor</th>
-                <th>Categoría</th>
-                <th>Ejemplares</th>
-                <th>Disponibles</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="books-table-body"></tbody>
-          </table>
-        </div>
-      </section>
+    <section id="users-section" class="view">
+      <div class="section-header">
+        <h2>Usuarios</h2>
+        <button id="new-user-btn" class="primary-btn" type="button">+ Nuevo usuario</button>
+      </div>
 
-      <section id="users-section" class="view">
-        <div class="section-header">
-          <h2>Usuarios</h2>
-          <button id="new-user-btn" class="primary-btn" type="button">+ Nuevo usuario</button>
-        </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Máx. préstamos</th>
+              <th>Estado</th>
+              <th>Fecha registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+    </section>
 
-        <div class="table-card">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Teléfono</th>
-                <th>Máx. préstamos</th>
-                <th>Estado</th>
-                <th>Fecha registro</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="users-table-body"></tbody>
-          </table>
-        </div>
-      </section>
+    <section id="loans-section" class="view">
+      <div class="section-header">
+        <h2>Préstamos</h2>
+      </div>
 
-      <section id="loans-section" class="view">
-        <div class="section-header">
-          <h2>Préstamos</h2>
-        </div>
-
-        <div class="loan-form-card">
-          <h3>Registrar préstamo</h3>
-          <form id="loan-form" class="loan-form">
-            <div class="field-group">
-              <label for="loan-user-select">Usuario</label>
-              <select id="loan-user-select" name="usuario_id" required></select>
-            </div>
-
-            <div class="field-group">
-              <label for="loan-copy-select">Ejemplar disponible</label>
-              <select id="loan-copy-select" name="ejemplar_id" required></select>
-            </div>
-
-            <div class="field-group small">
-              <label for="loan-days">Días préstamo</label>
-              <input id="loan-days" name="dias_prestamo" type="number" min="1" max="60" value="14" required />
-            </div>
-
-            <div class="field-group actions-field">
-              <button type="submit" class="primary-btn">Registrar préstamo</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="panel-card">
-          <div class="section-header" style="margin-bottom: 12px;">
-            <h3 style="margin: 0;">Préstamos activos</h3>
-            <span id="active-loans-count" class="badge active">0 activos</span>
+      <div class="loan-form-card">
+        <h3>Registrar préstamo</h3>
+        <form id="loan-form" class="loan-form">
+          <div class="field-group">
+            <label for="loan-user-select">Usuario</label>
+            <select id="loan-user-select" name="usuario_id" required></select>
           </div>
+
+          <div class="field-group">
+            <label for="loan-copy-select">Ejemplar disponible</label>
+            <select id="loan-copy-select" name="ejemplar_id" required></select>
+          </div>
+
+          <div class="field-group small">
+            <label for="loan-days">Días préstamo</label>
+            <input id="loan-days" name="dias_prestamo" type="number" min="1" max="60" value="14" required />
+          </div>
+
+          <div class="field-group actions-field">
+            <button type="submit" class="primary-btn">Registrar préstamo</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel-card">
+        <div class="section-header" style="margin-bottom: 12px;">
+          <h3 style="margin: 0;">Préstamos activos</h3>
+          <span id="active-loans-count" class="badge active">0 activos</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Libro</th>
+              <th>Ejemplar</th>
+              <th>Préstamo</th>
+              <th>Vencimiento</th>
+              <th>Plazo</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="active-loans-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="two-columns">
+        <div class="panel-card">
+          <h3>Préstamos vencidos</h3>
           <table>
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Usuario</th>
                 <th>Libro</th>
-                <th>Ejemplar</th>
-                <th>Préstamo</th>
                 <th>Vencimiento</th>
-                <th>Plazo</th>
+                <th>Días retraso</th>
                 <th>Acción</th>
               </tr>
             </thead>
-            <tbody id="active-loans-table-body"></tbody>
+            <tbody id="overdue-table-body"></tbody>
           </table>
         </div>
 
-        <div class="two-columns">
-          <div class="panel-card">
-            <h3>Préstamos vencidos</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Libro</th>
-                  <th>Vencimiento</th>
-                  <th>Días retraso</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody id="overdue-table-body"></tbody>
-            </table>
-          </div>
-
-          <div class="panel-card">
-            <h3>Ejemplares disponibles</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Código</th>
-                  <th>Libro</th>
-                </tr>
-              </thead>
-              <tbody id="available-table-body"></tbody>
-            </table>
-          </div>
+        <div class="panel-card">
+          <h3>Ejemplares disponibles</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>Libro</th>
+              </tr>
+            </thead>
+            <tbody id="available-table-body"></tbody>
+          </table>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+  </main>
 
-    <div id="toast" class="toast hidden" role="alert" aria-live="polite"></div>
+  <div id="toast" class="toast hidden" role="alert" aria-live="polite"></div>
 
-    <div id="book-modal" class="modal hidden" aria-hidden="true">
-      <div class="modal-card">
-        <div class="modal-header">
+  <div id="book-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card book-modal-card">
+      <div class="modal-header">
+        <div>
           <h3 id="book-modal-title">Nuevo libro</h3>
-          <button type="button" class="close-modal" data-close="book-modal">×</button>
+          <p id="book-modal-subtitle" class="modal-subtitle">Completa los datos del libro y de sus ejemplares.</p>
         </div>
+        <button type="button" class="close-modal" data-close="book-modal" aria-label="Cerrar">×</button>
+      </div>
 
-        <form id="book-form">
-          <input type="hidden" name="id" />
+      <form id="book-form">
+        <input type="hidden" name="id" />
+
+        <!-- Sección 1: información general -->
+        <section class="form-section">
+          <h4 class="section-title">Información general</h4>
 
           <div class="form-grid">
             <div class="field-group">
-              <label for="book-titulo">Título</label>
-              <input id="book-titulo" name="titulo" type="text" required />
+              <label for="book-titulo">Título <span class="req">*</span></label>
+              <input id="book-titulo" name="titulo" type="text" placeholder="Ej. Cien años de soledad" required />
             </div>
-
             <div class="field-group">
-              <label for="book-isbn">ISBN</label>
-              <input id="book-isbn" name="isbn" type="text" required />
+              <label for="book-isbn">ISBN <span class="req">*</span></label>
+              <input id="book-isbn" name="isbn" type="text" placeholder="Ej. 9780307474728" required />
             </div>
+          </div>
 
+          <div id="book-inventory-row" class="form-grid form-grid-3">
             <div class="field-group">
-              <label for="book-anio">Año de publicación</label>
-              <input id="book-anio" name="anio_publicacion" type="number" min="1000" max="2100" required />
+              <label for="book-anio">Año de publicación <span class="req">*</span></label>
+              <input id="book-anio" name="anio_publicacion" type="number" min="1000" max="2100" placeholder="Ej. 1967"
+                required />
             </div>
-
-            <div class="field-group">
-              <label for="book-categoria">Categoría</label>
-              <select id="book-categoria" name="categoria_id" required>
-                <option value="">Cargando categorías...</option>
-              </select>
-            </div>
-
-            <div class="field-group">
-              <label for="book-autor">Autor</label>
-              <select id="book-autor" name="autor_id" required>
-                <option value="">Cargando autores...</option>
-              </select>
-            </div>
-
             <div class="field-group">
               <label for="book-editorial">Editorial</label>
-              <input id="book-editorial" name="editorial" type="text" />
+              <input id="book-editorial" name="editorial" type="text" placeholder="Opcional" />
             </div>
-
-            <div class="field-group full-width">
-              <label for="book-descripcion">Descripción</label>
-              <textarea id="book-descripcion" name="descripcion" rows="3"></textarea>
-            </div>
-
             <div class="field-group" id="book-quantity-group">
               <label for="book-cantidad">Cantidad de ejemplares</label>
               <input id="book-cantidad" name="cantidad_ejemplares" type="number" min="1" max="100" value="1" />
             </div>
           </div>
+        </section>
 
-          <div class="form-actions">
-            <button type="button" class="secondary-btn" data-close="book-modal">Cancelar</button>
-            <button type="submit" class="primary-btn">Guardar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div id="user-modal" class="modal hidden" aria-hidden="true">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3 id="user-modal-title">Nuevo usuario</h3>
-          <button type="button" class="close-modal" data-close="user-modal">×</button>
-        </div>
-
-        <form id="user-form">
-          <input type="hidden" name="id" />
+        <!-- Sección 2: clasificación (categoría y autor) -->
+        <section class="form-section">
+          <h4 class="section-title">Clasificación</h4>
 
           <div class="form-grid">
             <div class="field-group">
-              <label for="user-nombre">Nombre</label>
-              <input id="user-nombre" name="nombre" type="text" required />
+              <label for="book-categoria">Categoría <span class="req">*</span></label>
+              <select id="book-categoria" name="categoria_id" required>
+                <option value="">Cargando categorías...</option>
+              </select>
             </div>
-
             <div class="field-group">
-              <label for="user-email">Email</label>
-              <input id="user-email" name="email" type="email" required />
-            </div>
-
-            <div class="field-group">
-              <label for="user-telefono">Teléfono</label>
-              <input id="user-telefono" name="telefono" type="text" />
-            </div>
-
-            <div class="field-group">
-              <label for="user-max-prestamos">Máximo de préstamos</label>
-              <input id="user-max-prestamos" name="max_prestamos" type="number" min="1" max="20" value="3" required />
-            </div>
-
-            <div class="field-group checkbox-field">
-              <label for="user-activo">Usuario activo</label>
-              <input id="user-activo" name="activo" type="checkbox" checked />
+              <label for="book-autor">Autor <span class="req">*</span></label>
+              <select id="book-autor" name="autor_id" required>
+                <option value="">Cargando autores...</option>
+              </select>
             </div>
           </div>
 
-          <div class="form-actions">
-            <button type="button" class="secondary-btn" data-close="user-modal">Cancelar</button>
-            <button type="submit" class="primary-btn">Guardar</button>
+          <!-- Paneles de alta rápida: categoría (izquierda) | autor (derecha).
+               Se muestran solo al elegir "Registrar nueva..." en los selects. -->
+          <div id="new-entities-wrapper" class="entity-panels-wrapper hidden">
+            <div id="new-categoria-panel" class="new-entity-panel hidden">
+              <p class="panel-title">Nueva categoría</p>
+              <div class="field-group">
+                <label for="nueva-categoria-nombre">Nombre de la categoría</label>
+                <input id="nueva-categoria-nombre" type="text" maxlength="100" />
+              </div>
+              <div class="field-group">
+                <label for="nueva-categoria-descripcion">Descripción (opcional)</label>
+                <input id="nueva-categoria-descripcion" type="text" maxlength="300" />
+              </div>
+            </div>
+
+            <div id="new-autor-panel" class="new-entity-panel hidden">
+              <p class="panel-title">Nuevo autor</p>
+              <div class="field-group">
+                <label for="nuevo-autor-nombre">Nombre</label>
+                <input id="nuevo-autor-nombre" type="text" maxlength="100" />
+              </div>
+              <div class="field-group">
+                <label for="nuevo-autor-apellido">Apellido</label>
+                <input id="nuevo-autor-apellido" type="text" maxlength="100" />
+              </div>
+              <div class="field-group">
+                <label for="nuevo-autor-nacionalidad">Nacionalidad (opcional)</label>
+                <input id="nuevo-autor-nacionalidad" type="text" maxlength="80" />
+              </div>
+            </div>
           </div>
-        </form>
-      </div>
+        </section>
+
+        <!-- Sección 3: descripción -->
+        <section class="form-section">
+          <h4 class="section-title">Descripción</h4>
+          <div class="field-group">
+            <textarea id="book-descripcion" name="descripcion" rows="3"
+              placeholder="Breve reseña del libro (opcional)"></textarea>
+          </div>
+        </section>
+
+        <div class="form-actions book-actions">
+          <button type="submit" class="primary-btn">Guardar libro</button>
+          <button type="button" class="secondary-btn" data-close="book-modal">Cancelar</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script src="app.js"></script>
-  </body>
+  <div id="user-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="user-modal-title">Nuevo usuario</h3>
+        <button type="button" class="close-modal" data-close="user-modal">×</button>
+      </div>
+
+      <form id="user-form">
+        <input type="hidden" name="id" />
+
+        <div class="form-grid">
+          <div class="field-group">
+            <label for="user-nombre">Nombre</label>
+            <input id="user-nombre" name="nombre" type="text" required />
+          </div>
+
+          <div class="field-group">
+            <label for="user-email">Email</label>
+            <input id="user-email" name="email" type="email" required />
+          </div>
+
+          <div class="field-group">
+            <label for="user-telefono">Teléfono</label>
+            <input id="user-telefono" name="telefono" type="text" />
+          </div>
+
+          <div class="field-group">
+            <label for="user-max-prestamos">Máximo de préstamos</label>
+            <input id="user-max-prestamos" name="max_prestamos" type="number" min="1" max="20" value="3" required />
+          </div>
+
+          <div class="field-group checkbox-field">
+            <label for="user-activo">Usuario activo</label>
+            <input id="user-activo" name="activo" type="checkbox" checked />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary-btn" data-close="user-modal">Cancelar</button>
+          <button type="submit" class="primary-btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=4"></script>
+</body>
+
 </html>

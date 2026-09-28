@@ -36,6 +36,11 @@ button {
   cursor: pointer;
 }
 
+/* Utilidad general para ocultar elementos */
+.hidden {
+  display: none !important;
+}
+
 .container {
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
@@ -127,6 +132,10 @@ button {
 .secondary-btn {
   background: #e5e7eb;
   color: var(--text);
+}
+
+.secondary-btn:hover {
+  background: #d5d9e0;
 }
 
 .action-btn {
@@ -226,24 +235,47 @@ tbody tr:hover {
   align-items: end;
 }
 
+/* ---------- Campos de formulario ---------- */
 .field-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .field-group label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: #344054;
+}
+
+.field-group .req {
+  color: var(--danger);
 }
 
 .field-group input,
 .field-group select,
 .field-group textarea {
+  width: 100%;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   background: #fff;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-group input::placeholder,
+.field-group textarea::placeholder {
+  color: #98a2b3;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.15);
 }
 
 .field-group textarea {
@@ -275,6 +307,7 @@ tbody tr:hover {
   gap: 22px;
 }
 
+/* ---------- Modales ---------- */
 .modal {
   position: fixed;
   inset: 0;
@@ -284,29 +317,39 @@ tbody tr:hover {
   z-index: 20;
 }
 
-.modal.hidden,
-.toast.hidden {
-  display: none;
-}
-
 .modal-card {
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   width: min(760px, calc(100% - 28px));
   background: white;
   border-radius: 16px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  padding: 20px;
+  padding: 24px 28px;
+}
+
+/* El modal de libros es más ancho para alojar los paneles lado a lado */
+.book-modal-card {
+  width: min(860px, calc(100% - 28px));
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .modal-header h3 {
   margin: 0;
+  font-size: 1.35rem;
+}
+
+.modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 
 .close-modal {
@@ -317,21 +360,123 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+.close-modal:hover {
+  color: var(--text);
+}
+
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Al editar (sin cantidad de ejemplares) la fila queda en 2 columnas */
+.form-grid-3.form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .full-width {
   grid-column: 1 / -1;
 }
 
+/* Secciones del formulario de libro */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.form-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-dark);
+}
+
+/* ---------- Paneles: nueva categoría (izq.) | nuevo autor (der.) ---------- */
+.entity-panels-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* Cada panel conserva siempre su columna, aunque el otro esté oculto */
+#new-categoria-panel {
+  grid-column: 1;
+}
+
+#new-autor-panel {
+  grid-column: 2;
+}
+
+.new-entity-panel {
+  border: 1px dashed var(--primary);
+  background: var(--secondary);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-entity-panel .panel-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary-dark);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(47, 111, 237, 0.2);
+}
+
+/* Cuadros de texto más pequeños dentro de los paneles */
+.new-entity-panel .field-group {
+  gap: 3px;
+}
+
+.new-entity-panel .field-group label {
+  font-size: 0.78rem;
+}
+
+.new-entity-panel .field-group input {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  max-width: 280px;
+}
+
+/* ---------- Botones del formulario ---------- */
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 22px;
+}
+
+/* Guardar libro | Cancelar, alineados a la izquierda y siempre visibles */
+.book-actions {
+  justify-content: flex-start;
+  position: sticky;
+  bottom: -24px;
+  margin: 8px -28px -24px;
+  padding: 14px 28px;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 16px 16px;
 }
 
 .toast {
@@ -366,6 +511,7 @@ tbody tr:hover {
 }
 
 @media (max-width: 760px) {
+
   .header-inner,
   .section-header {
     flex-direction: column;
@@ -374,8 +520,30 @@ tbody tr:hover {
 
   .two-columns,
   .loan-form,
-  .form-grid {
+  .form-grid,
+  .form-grid-3,
+  .form-grid-3.form-grid-2,
+  .entity-panels-wrapper {
     grid-template-columns: 1fr;
+  }
+
+  #new-categoria-panel,
+  #new-autor-panel {
+    grid-column: 1;
+  }
+
+  .new-entity-panel .field-group input {
+    max-width: none;
+  }
+
+  .modal-card {
+    padding: 20px 18px;
+  }
+
+  .book-actions {
+    margin: 8px -18px -20px;
+    padding: 12px 18px;
+    bottom: -20px;
   }
 
   .actions-field {

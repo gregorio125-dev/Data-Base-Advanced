@@ -67,3 +67,27 @@ GO
 -- WHERE PrestamoID = 1;
 -- SELECT * FROM dbo.Multa;
 GO
+
+-- 9. Transacción: alta de libro con autor y categoría NUEVOS (todo o nada)
+--    Crea Categoria + Autor + Libro + LibroAutor + 2 Ejemplares en una sola transacción.
+EXEC dbo.sp_RegistrarLibro
+    @Titulo = N'Rayuela', @ISBN = N'9788437604572', @AnioPublicacion = 1963,
+    @Editorial = N'Sudamericana', @CantidadEjemplares = 2,
+    @NuevaCategoriaNombre = N'Poesía y narrativa breve',
+    @NuevoAutorNombre = N'Julio', @NuevoAutorApellido = N'Cortázar',
+    @NuevoAutorNacionalidad = N'Argentina';
+GO
+
+-- 10. Demostración de ROLLBACK: mismo ISBN => falla y NO queda ningún autor/categoría a medias
+--     (se intenta crear el autor "Fantasma" junto con un ISBN duplicado)
+BEGIN TRY
+    EXEC dbo.sp_RegistrarLibro
+        @Titulo = N'Libro duplicado', @ISBN = N'9788437604572', @AnioPublicacion = 2000,
+        @CategoriaID = 1,
+        @NuevoAutorNombre = N'Autor', @NuevoAutorApellido = N'Fantasma';
+END TRY
+BEGIN CATCH
+    PRINT 'Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+SELECT COUNT(*) AS AutoresFantasma FROM dbo.Autor WHERE Apellido = N'Fantasma';  -- debe ser 0
+GO

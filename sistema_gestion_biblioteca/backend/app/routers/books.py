@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.database import fetch_all, fetch_one, get_connection
+from app.database import fetch_all, fetch_one, get_connection, clean_sql_error
 from app.schemas import BookCreate, BookUpdate
 
 router = APIRouter(prefix="/api/books", tags=["Libros"])
@@ -31,39 +31,42 @@ def get_book(book_id: int):
 
 @router.post("", status_code=201)
 def create_book(data: BookCreate):
+    """Alta de libro mediante dbo.sp_RegistrarLibro (una única transacción atómica).
+
+    Crea, si hace falta, la categoría y/o el autor nuevos junto con el libro,
+    su relación LibroAutor y sus ejemplares. Si algo falla, no se guarda nada.
+    """
+    cat = data.nueva_categoria
+    aut = data.nuevo_autor
     try:
-        with get_connection() as conn:
+        # autocommit=True: la transacción real (BEGIN/COMMIT/ROLLBACK) vive en el SP.
+        with get_connection(autocommit=True) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO dbo.Libro
-                    (Titulo, ISBN, AnioPublicacion, Editorial, Descripcion, CategoriaID, AutorID)
-                OUTPUT INSERTED.LibroID
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (data.titulo, data.isbn, data.anio_publicacion, data.editorial,
-                  data.descripcion, data.categoria_id, data.autor_id))
-            book_id = cursor.fetchone()[0]
-
-            cursor.execute("""
-                INSERT INTO dbo.LibroAutor (LibroID, AutorID)
-                VALUES (?, ?)
-            """, (book_id, data.autor_id))
-
-            for numero in range(1, data.cantidad_ejemplares + 1):
-                cursor.execute("""
-                    INSERT INTO dbo.Ejemplar (LibroID, CodigoInventario, Estado)
-                    VALUES (?, CONCAT('AUTO-', ?, '-', ?), 'Disponible')
-                """, (book_id, book_id, numero))
-            conn.commit()
-        return {"mensaje": "Libro creado correctamente", "libro_id": book_id}
+                EXEC dbo.sp_RegistrarLibro
+                    @Titulo=?, @ISBN=?, @AnioPublicacion=?, @Editorial=?, @Descripcion=?,
+                    @CantidadEjemplares=?,
+                    @CategoriaID=?, @NuevaCategoriaNombre=?, @NuevaCategoriaDescripcion=?,
+                    @AutorID=?, @NuevoAutorNombre=?, @NuevoAutorApellido=?, @NuevoAutorNacionalidad=?
+            """, (data.titulo, data.isbn, data.anio_publicacion, data.editorial, data.descripcion,
+                  data.cantidad_ejemplares,
+                  data.categoria_id, cat.nombre if cat else None, cat.descripcion if cat else None,
+                  data.autor_id, aut.nombre if aut else None, aut.apellido if aut else None,
+                  aut.nacionalidad if aut else None))
+            row = cursor.fetchone()
+        return {
+            "mensaje": "Libro creado correctamente",
+            "libro_id": row.LibroID,
+            "categoria_id": row.CategoriaID,
+            "autor_id": row.AutorID,
+            "categoria_creada": bool(row.CategoriaCreada),
+            "autor_creado": bool(row.AutorCreado),
+        }
     except Exception as exc:
-        err_msg = str(exc)
-        if "UQ_Libro_ISBN" in err_msg:
+        err_msg = clean_sql_error(exc)
+        if "UQ_Libro_ISBN" in str(exc) or "ISBN ya está registrado" in err_msg:
             raise HTTPException(409, "El ISBN ya está registrado para otro libro.")
-        if "FK_Libro_Categoria" in err_msg:
-            raise HTTPException(400, "La categoría seleccionada no existe.")
-        if "FK_Libro_Autor" in err_msg:
-            raise HTTPException(400, "El autor seleccionado no existe.")
-        raise HTTPException(400, f"Error al registrar libro: {err_msg}")
+        raise HTTPException(400, err_msg or "Error al registrar libro.")
 
 @router.put("/{book_id}")
 def update_book(book_id: int, data: BookUpdate):

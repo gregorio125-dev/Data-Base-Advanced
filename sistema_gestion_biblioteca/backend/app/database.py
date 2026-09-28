@@ -1,4 +1,5 @@
 import os
+import re
 from contextlib import contextmanager
 import pyodbc
 from dotenv import load_dotenv
@@ -26,8 +27,10 @@ CONNECTION_STRING = (
 )
 
 @contextmanager
-def get_connection():
-    conn = pyodbc.connect(CONNECTION_STRING)
+def get_connection(autocommit=False):
+    # autocommit=True se usa cuando la transacción la maneja el propio
+    # procedimiento almacenado (BEGIN TRANSACTION / COMMIT dentro del SP).
+    conn = pyodbc.connect(CONNECTION_STRING, autocommit=autocommit)
     try:
         yield conn
     finally:
@@ -50,3 +53,11 @@ def fetch_one(sql, params=()):
         cursor.execute(sql, params)
         row = cursor.fetchone()
         return row_to_dict(cursor, row) if row else None
+
+def clean_sql_error(exc):
+    """Extrae solo el mensaje legible de un error de SQL Server (THROW / RAISERROR)."""
+    msg = str(exc)
+    if "[SQL Server]" in msg:
+        msg = msg.split("[SQL Server]")[-1].strip()
+    msg = re.sub(r"(\s*\(\d+\))*\s*\(SQL[A-Za-z]+\)['\"]?\)?\s*$", "", msg)
+    return msg.strip()

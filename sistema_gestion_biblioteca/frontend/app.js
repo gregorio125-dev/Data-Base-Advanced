@@ -1,4 +1,6 @@
 const API_BASE = 'http://127.0.0.1:8000/api';
+// Valor especial de los <select> de categoría/autor para registrar uno nuevo desde el formulario.
+const NEW_OPTION = '__new__';
 
 const state = {
   books: [],
@@ -14,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindTabs();
   bindGlobalModalControls();
   bindBookForm();
+  bindNewEntitySelects();
   bindUserForm();
   bindLoanForm();
   bindTableActions();
@@ -63,13 +66,50 @@ function bindBookForm() {
       titulo: form.elements.titulo.value.trim(),
       isbn: form.elements.isbn.value.trim(),
       anio_publicacion: Number(form.elements.anio_publicacion.value),
-      categoria_id: Number(form.elements.categoria_id.value),
-      autor_id: Number(form.elements.autor_id.value),
       editorial: form.elements.editorial.value.trim() || null,
       descripcion: form.elements.descripcion.value.trim() || null
     };
 
-    if (!payload.titulo || !payload.isbn || !payload.categoria_id || !payload.autor_id) {
+    const catValue = form.elements.categoria_id.value;
+    const autValue = form.elements.autor_id.value;
+    const creatingCategory = !bookId && catValue === NEW_OPTION;
+    const creatingAuthor = !bookId && autValue === NEW_OPTION;
+
+    // Categoría: existente (ID) o nueva (datos)
+    if (creatingCategory) {
+      const nombre = document.getElementById('nueva-categoria-nombre').value.trim();
+      if (nombre.length < 2) {
+        showMessage('Escribe el nombre de la nueva categoría (mínimo 2 caracteres).', 'error');
+        return;
+      }
+      payload.nueva_categoria = {
+        nombre,
+        descripcion: document.getElementById('nueva-categoria-descripcion').value.trim() || null
+      };
+    } else {
+      payload.categoria_id = Number(catValue);
+    }
+
+    // Autor: existente (ID) o nuevo (datos)
+    if (creatingAuthor) {
+      const nombre = document.getElementById('nuevo-autor-nombre').value.trim();
+      const apellido = document.getElementById('nuevo-autor-apellido').value.trim();
+      if (!nombre || !apellido) {
+        showMessage('Escribe el nombre y el apellido del nuevo autor.', 'error');
+        return;
+      }
+      payload.nuevo_autor = {
+        nombre,
+        apellido,
+        nacionalidad: document.getElementById('nuevo-autor-nacionalidad').value.trim() || null
+      };
+    } else {
+      payload.autor_id = Number(autValue);
+    }
+
+    if (!payload.titulo || !payload.isbn
+      || (!creatingCategory && !payload.categoria_id)
+      || (!creatingAuthor && !payload.autor_id)) {
       showMessage('Completa los campos requeridos del libro.', 'error');
       return;
     }
@@ -87,21 +127,75 @@ function bindBookForm() {
           cantidad_ejemplares: Number(form.elements.cantidad_ejemplares.value || 1)
         };
 
-        await apiRequest('/books', {
+        const response = await apiRequest('/books', {
           method: 'POST',
           body: JSON.stringify(createPayload)
         });
-        showMessage('Libro creado correctamente.', 'success');
+
+        const extras = [];
+        if (response.categoria_creada) extras.push('nueva categoría');
+        if (response.autor_creado) extras.push('nuevo autor');
+        showMessage(
+          extras.length
+            ? `Libro creado correctamente. También se registró: ${extras.join(' y ')}.`
+            : 'Libro creado correctamente.',
+          'success'
+        );
       }
 
       form.reset();
       closeModal('book-modal');
+      await loadCategoriesAndAuthors(); // refresca los selects con lo recién creado
       await loadBooks();
       await loadLoanData();
     } catch (error) {
       showMessage(error.message, 'error');
     }
   });
+}
+
+// Muestra u oculta los paneles de "nueva categoría" / "nuevo autor" según la opción elegida.
+function bindNewEntitySelects() {
+  document.getElementById('book-categoria').addEventListener('change', syncNewEntityPanels);
+  document.getElementById('book-autor').addEventListener('change', syncNewEntityPanels);
+}
+
+function syncNewEntityPanels() {
+  const catNew = document.getElementById('book-categoria').value === NEW_OPTION;
+  const autNew = document.getElementById('book-autor').value === NEW_OPTION;
+
+  document.getElementById('new-categoria-panel').classList.toggle('hidden', !catNew);
+  document.getElementById('new-autor-panel').classList.toggle('hidden', !autNew);
+  // El contenedor solo ocupa espacio si hay al menos un panel visible
+  document.getElementById('new-entities-wrapper').classList.toggle('hidden', !(catNew || autNew));
+
+  if (!catNew) {
+    document.getElementById('nueva-categoria-nombre').value = '';
+    document.getElementById('nueva-categoria-descripcion').value = '';
+  }
+  if (!autNew) {
+    document.getElementById('nuevo-autor-nombre').value = '';
+    document.getElementById('nuevo-autor-apellido').value = '';
+    document.getElementById('nuevo-autor-nacionalidad').value = '';
+  }
+}
+
+// Llena los <select> de categoría y autor. Solo al CREAR se ofrece la opción de registrar uno nuevo.
+function populateCatalogSelects(allowNew) {
+  const catSelect = document.getElementById('book-categoria');
+  const autSelect = document.getElementById('book-autor');
+  if (!catSelect || !autSelect) return;
+
+  const newCat = allowNew ? `<option value="${NEW_OPTION}">＋ Registrar nueva categoría…</option>` : '';
+  const newAut = allowNew ? `<option value="${NEW_OPTION}">＋ Registrar nuevo autor…</option>` : '';
+
+  catSelect.innerHTML = '<option value="">Seleccione una categoría</option>' +
+    state.categories.map((c) => `<option value="${c.CategoriaID}">${escapeHtml(c.Nombre)}</option>`).join('') +
+    newCat;
+
+  autSelect.innerHTML = '<option value="">Seleccione un autor</option>' +
+    state.authors.map((a) => `<option value="${a.AutorID}">${escapeHtml(a.NombreCompleto || `${a.Nombre} ${a.Apellido}`)}</option>`).join('') +
+    newAut;
 }
 
 function bindUserForm() {
@@ -289,19 +383,7 @@ async function loadCategoriesAndAuthors() {
     ]);
     state.categories = categories;
     state.authors = authors;
-
-    const catSelect = document.getElementById('book-categoria');
-    const autSelect = document.getElementById('book-autor');
-
-    if (catSelect) {
-      catSelect.innerHTML = '<option value="">Seleccione una categoría</option>' +
-        categories.map((c) => `<option value="${c.CategoriaID}">${escapeHtml(c.Nombre)}</option>`).join('');
-    }
-
-    if (autSelect) {
-      autSelect.innerHTML = '<option value="">Seleccione un autor</option>' +
-        authors.map((a) => `<option value="${a.AutorID}">${escapeHtml(a.NombreCompleto || `${a.Nombre} ${a.Apellido}`)}</option>`).join('');
-    }
+    populateCatalogSelects(true);
   } catch (error) {
     console.error('Error al cargar catálogos:', error);
   }
@@ -490,12 +572,22 @@ function openBookModal(book = null) {
   const form = document.getElementById('book-form');
   const modal = document.getElementById('book-modal');
   const quantityGroup = document.getElementById('book-quantity-group');
+  const inventoryRow = document.getElementById('book-inventory-row');
   const title = document.getElementById('book-modal-title');
+  const subtitle = document.getElementById('book-modal-subtitle');
 
+  // Al crear se permite registrar categoría/autor nuevos; al editar solo se elige entre los existentes.
+  populateCatalogSelects(!book);
   form.reset();
+  syncNewEntityPanels();
   form.elements.id.value = book ? book.LibroID : '';
   title.textContent = book ? 'Editar libro' : 'Nuevo libro';
-  quantityGroup.style.display = book ? 'none' : 'block';
+  subtitle.textContent = book
+    ? `Modificando el libro #${book.LibroID}. Los ejemplares se gestionan por separado.`
+    : 'Completa los datos del libro y de sus ejemplares.';
+  // Al editar no se piden ejemplares: la fila pasa de 3 a 2 columnas
+  quantityGroup.classList.toggle('hidden', !!book);
+  inventoryRow.classList.toggle('form-grid-2', !!book);
 
   if (book) {
     form.elements.titulo.value = book.Titulo || '';
