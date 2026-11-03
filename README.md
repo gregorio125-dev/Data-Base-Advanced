@@ -41,6 +41,7 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
 - `Prestamo` (libro, usuario, fecha de préstamo, fecha esperada de devolución, fecha real de devolución)
 - `Multa` (préstamo asociado, monto, estado de pago)
 - `Categoria` / `Autor` (si se normalizan como entidades separadas)
+
 **Modelo NoSQL (MongoDB):**
 - `Reseña` (libro_id, usuario_id, calificación, comentario, etiquetas, fecha) — estructura flexible, ya que no todas las reseñas tienen los mismos campos (algunas con etiquetas, otras sin calificación numérica, etc.)
 **Data Mart / analítica:**
