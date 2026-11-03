@@ -44,6 +44,7 @@ El proyecto busca resolver esto mediante un sistema que combine una **base de da
 
 **Modelo NoSQL (MongoDB):**
 - `Reseña` (libro_id, usuario_id, calificación, comentario, etiquetas, fecha) — estructura flexible, ya que no todas las reseñas tienen los mismos campos (algunas con etiquetas, otras sin calificación numérica, etc.)
+  
 **Data Mart / analítica:**
 - Hechos de préstamos (libro, fecha, categoría, usuario) para construir reportes agregados.
 ---
